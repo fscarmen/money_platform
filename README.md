@@ -8,7 +8,8 @@
 - [安装和卸载](README.md#安装和卸载)
 - [traffmonetizer 介绍（转述自 Google Play)](README.md#traffmonetizer-介绍转述自-google-play)
 - [bitping 介绍 (转述自 极客元素)](README.md#bitping-介绍-转述自-极客元素)
-- [repocket 介绍 （转述自 官网)](README.md#repocket-介绍-转述自-官网)
+- [repocket 介绍（转述自 官网)](README.md#repocket-介绍-转述自-官网)
+- [peer2profit 介绍 (转述自 知乎)](README.md#peer2profit-介绍--转述自-知乎-)
 - [免责声明](README.md#免责声明)
 
 * * *
@@ -84,6 +85,16 @@ bitping 是一个强调真实数据的分布式、众包的智能网络。也是
 注册: https://link.repocket.co/ArVa
 
 Repocket的创建是为了让任何能上网的人都能快速入门，赚取被动的副业收入。
+
+## peer2profit 介绍 [ (转述自 知乎) ](https://zhuanlan.zhihu.com/p/439237654)
+
+注册: https://p2pr.me/16526078526280cb6c30a08
+
+全自动化挂机多平台赚钱，零成本可放大。
+
+最先是平台的详细介绍。这一Peer2Profit平台是海外有悠久的历史的挂机平台。其工作原理与千寻以前讲解的平台类似。挂机市场销售设备的空余网络带宽可以得到盈利。
+
+Peer2Profit较大的特征便是有Windows，Android，Mac，Linux等版本号的手机软件，可以根据电脑上和手机上挂机。并且可以在同一帐户下登陆的设备沒有限制，同一IP现阶段都没有挂机限定(这可能是bug，之后应当限制)。可是，从千寻的评测看来，一个IP挂两部设备是较好的，不然网络速度变卡到你开始怀疑人生。
 
 ## 免责声明
 
