@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 更新日期 2022-10-30
+# 更新日期 2022-10-31
 
-PLATFORM=("watchtower" "traffmonetizer" "bitping" "repocket" "peer2profit")
-REPOSITORY=("containrrr/watchtower" "traffmonetizer/cli" "bitping/bitping-node" "repocket/repocket" "peer2profit/peer2profit_linux")
+PLATFORM=("watchtower" "traffmonetizer" "bitping" "repocket" "peer2profit" "psclient")
+REPOSITORY=("containrrr/watchtower" "traffmonetizer/cli" "bitping/bitping-node" "repocket/repocket" "peer2profit/peer2profit_linux" "packetstream/psclient")
 PLATFORM_NUM="${#PLATFORM[*]}"
 
 # 自定义字体彩色，read 函数，安装依赖函数
@@ -54,22 +54,27 @@ check_install() {
 # 判断 CPU 架构
 check_arch() {
   ARCHITECTURE=$(uname -m)
-  case "$ARCHITECTURE" in
-    aarch64 ) ARCH=arm64v8 ;;
-    x64|x86_64|amd64 ) ARCH=latest ;;
-    * ) red " ERROR: Unsupported architecture: $ARCHITECTURE \n" && exit 1 ;;
-  esac
+  [[ ! "$ARCHITECTURE" =~ aarch64|x64|x86_64|amd64 ]] && red " ERROR: Unsupported architecture: $ARCHITECTURE \n" && exit 1
+}
+
+error_input() {
+  [ "$ERROR" = 1 ] && red "\n ERROR: Wrong choice. " && sleep 1 || ERROR=1
 }
 
 # 选择平台，并输入账户信息
 choose_platform() {
   until [[ "$CHOOSE" = [1-$((PLATFORM_NUM - 1 ))] ]]; do
-    yellow "\n Install or change account information:\n 1. Traffmonetizer\n 2. Bitping\n 3. Repocket\n 4. Peer2profit\n " && reading " Choose [1-$((PLATFORM_NUM - 1 ))]: " CHOOSE
+    error_input
+    yellow "\n Install or change account information:\n 1. Traffmonetizer\n 2. Bitping\n 3. Repocket\n 4. Peer2profit\n 5. PacketStream\n " && reading " Choose [1-$((PLATFORM_NUM - 1 ))]: " CHOOSE
   done
 
   [[ "$CHOOSE" = [23] && ! "$ARCHITECTURE" =~ x64|x86_64|amd64 ]] && red " ERROR: ${PLATFORM[$CHOOSE]} support amd64 only. \n" && exit 1
   case "$CHOOSE" in
-    1 ) [ -z "$TMTOKEN" ] && reading " Enter your Traffmonetizer token: " TMTOKEN
+    1 ) case "$ARCHITECTURE" in
+          aarch64 ) ARCH=arm64v8 ;;
+          x64|x86_64|amd64 ) ARCH=latest ;;
+        esac
+        [ -z "$TMTOKEN" ] && reading " Enter your Traffmonetizer token: " TMTOKEN
         [ -z "$TMTOKEN" ] && red " ERROR: Wrong account message. \n" && exit 1 ;;
     2 )  ;;
     3 ) [ -z "$EMAIL" ] && reading " Enter your Email: " EMAIL
@@ -77,27 +82,33 @@ choose_platform() {
         [[ -z "$EMAIL" || -z "$PASSWORD" ]] && red " ERROR: Wrong account message. \n" && exit 1 ;;
     4 ) [ -z "$EMAIL" ] && reading " Enter your Email: " EMAIL
         [ -z "$EMAIL" ] && red " ERROR: Wrong account message. \n" && exit 1 ;;
+    5 ) [ -z "$CID" ] && reading " Enter your CID: " CID
+        [ -z "$CID" ] && red " ERROR: Wrong account message. \n" && exit 1 ;;
     * ) red " ERROR: Wrong choose. \n" && unset CHOOSE && choose_platform ;;
   esac
 }
 
 container_build() {
   build_1() { 
-    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart=always traffmonetizer/cli:$ARCH start accept --token "$TMTOKEN"
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart=always ${REPOSITORY[$CHOOSE]}:$ARCH start accept --token "$TMTOKEN"
   }
 
   build_2() {
     mkdir -p $HOME/.bitping/
-    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -it --name ${PLATFORM[$CHOOSE]} --mount type=bind,source="$HOME/.bitping/",target=/root/.bitping bitping/bitping-node:latest
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -it --name ${PLATFORM[$CHOOSE]} --mount type=bind,source="$HOME/.bitping/",target=/root/.bitping ${REPOSITORY[$CHOOSE]}
   }
 
   build_3() {
-    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart=always -e RP_EMAIL=$EMAIL -e RP_PASSWORD=$PASSWORD repocket/repocket
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart=always -e RP_EMAIL=$EMAIL -e RP_PASSWORD=$PASSWORD ${REPOSITORY[$CHOOSE]}
   }
 
   build_4() {
     export P2P_EMAIL=$EMAIL
-    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart always -e P2P_EMAIL=$P2P_EMAIL peer2profit/peer2profit_linux:latest
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart always -e P2P_EMAIL=$P2P_EMAIL ${REPOSITORY[$CHOOSE]}
+  }
+
+  build_5() {
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -d --name ${PLATFORM[$CHOOSE]} --restart always -e CID=$CID ${REPOSITORY[$CHOOSE]}
   }
 
   # 宿主机安装 docker
@@ -132,7 +143,8 @@ result() {
 uninstall() {
   # 限定输入范围
   until [[ "$REMOVE" = [0-$PLATFORM_NUM] ]]; do
-    yellow "\n 0. Watchtower\n 1. Traffmonetizer\n 2. Bitping\n 3. Repocket\n 4. Peer2profit\n 5. Above all \n" && reading " Remove choose [0-${#PLATFORM[*]}]: " REMOVE
+    error_input
+    yellow "\n 0. Watchtower\n 1. Traffmonetizer\n 2. Bitping\n 3. Repocket\n 4. Peer2profit\n 5. PacketStream\n 6. Above all\n " && reading " Remove choose [0-${#PLATFORM[*]}]: " REMOVE
   done
 
   if [ "$REMOVE" = "${#PLATFORM[*]}" ]; then
