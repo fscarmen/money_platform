@@ -76,7 +76,7 @@ choose_platform() {
         esac
         [ -z "$TMTOKEN" ] && reading " Enter your Traffmonetizer token: " TMTOKEN
         [ -z "$TMTOKEN" ] && red " ERROR: Wrong account message. \n" && exit 1 ;;
-    2 )  ;;
+    2 ) ;;
     3 ) [ -z "$EMAIL" ] && reading " Enter your Email: " EMAIL
         [ -z "$PASSWORD" ] && reading " Enter your password: " PASSWORD
         [[ -z "$EMAIL" || -z "$PASSWORD" ]] && red " ERROR: Wrong account message. \n" && exit 1 ;;
@@ -94,8 +94,8 @@ container_build() {
   }
 
   build_2() {
-    mkdir -p $HOME/.bitping/
-    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -it --name ${PLATFORM[$CHOOSE]} --mount type=bind,source="$HOME/.bitping/",target=/root/.bitping ${REPOSITORY[$CHOOSE]}
+    RUN_MODE=d && [ ! -e $HOME/.bitping/credentials.json ] && RUN_MODE=it && mkdir -p $HOME/.bitping/
+    docker rm -f ${PLATFORM[$CHOOSE]} 2>/dev/null || true && docker run -$RUN_MODE --name ${PLATFORM[$CHOOSE]} --mount type=bind,source="$HOME/.bitping/",target=/root/.bitping ${REPOSITORY[$CHOOSE]}
   }
 
   build_3() {
@@ -150,9 +150,14 @@ uninstall() {
   if [ "$REMOVE" = "${#PLATFORM[*]}" ]; then
     docker rm -f ${PLATFORM[*]} 2>/dev/null
     docker rmi -f ${REPOSITORY[*]} 2>/dev/null
+    [ -d $HOME/.bitping ] && rm -rd $HOME/.bitping
   else
     docker rm -f ${PLATFORM[$REMOVE]} 2>/dev/null
     docker rmi -f ${REPOSITORY[$REMOVE]} 2>/dev/null
+    case "$REMOVE" in
+      2 ) [ -d $HOME/.bitping ] && rm -rd $HOME/.bitping ;;
+      4 ) unset P2P_EMAIL ;;
+    esac
   fi
   green "\n Uninstall containers and images complete. \n"
   exit 0
